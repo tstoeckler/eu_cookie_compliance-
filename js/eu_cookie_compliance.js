@@ -70,7 +70,7 @@
     if (drupalSettings.eu_cookie_compliance.popup_position) {
       popup.prependTo("body");
       popup.show()
-        .attr({"class": "sliding-popup-top"})
+        .attr({"class": "sliding-popup-top clearfix"})
         .css({
           "top": -1 * height
         })
