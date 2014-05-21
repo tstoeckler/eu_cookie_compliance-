@@ -3,71 +3,61 @@
  * @file
  * This module intends to deal with the EU Directive on Privacy and Electronic
  * Communications that comes into effect in the UK on 26th May 2012.
- *
- * Author: Marcin Pajdzik
  */
 
 /**
- * Implements hook_menu().
+ * Implements hook_page_build().
  */
-function eu_cookie_compliance_menu() {
-  $items['admin/config/system/eu-cookie-compliance'] = array(
-    'title' => 'EU Cookie Compliance',
-    'description' => 'Make your website compliant with the EU Directive on Privacy and Electronic Communications.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('eu_cookie_compliance_admin_form'),
-    'access arguments' => array('administer EU Cookie Compliance popup'),
-    'file' => 'eu_cookie_compliance.admin.inc',
-  );
-  return $items;
-}
-
-/**
- * Implements hook_init().
- */
-function eu_cookie_compliance_init() {
+function eu_cookie_compliance_page_build(&$page) {
   $popup_settings = eu_cookie_compliance_get_settings();
-  if (isset($popup_settings['eu_only']) && $popup_settings['eu_only'] && module_exists('geoip')) { 
+  if (isset($popup_settings['eu_only']) && $popup_settings['eu_only'] && \Drupal::moduleHandler()->moduleExists('geoip')) {
     $geoip_match = false;
-    if ( in_array(geoip_country_code(), array('BE', 'BG', 'CZ', 'DK', 'DE', 'EE', 'IE', 'EL', 'ES', 'FR', 'IT', 'CY', 'LV', 'UK', 'LT', 'LU', 'HU', 'MT', 'NL', 'AT', 'PL', 'PT', 'RO', 'SI', 'SK', 'FI', 'SE'))) {
-      $geoip_match = true;
+    if (function_exists('geoip_country_code')) {
+      if (in_array(geoip_country_code(), array('BE', 'BG', 'CZ', 'DK', 'DE', 'EE', 'IE', 'EL', 'ES', 'FR', 'IT', 'CY', 'LV', 'UK', 'LT', 'LU', 'HU', 'MT', 'NL', 'AT', 'PL', 'PT', 'RO', 'SI', 'SK', 'FI', 'SE'))) {
+        $geoip_match = true;
+      }
     }
-  } else {
+  }
+  else {
     $geoip_match = true;
   }
-
-  if (!empty($popup_settings['popup_enabled']) && user_access('display EU Cookie Compliance popup') && $geoip_match) {
-    global $language;
-
-    // color overrides
-    if ($popup_settings['popup_bg_hex'] != '' and $popup_settings['popup_text_hex'] != '') {
-      $position = $popup_settings['popup_position'] ? 'top' : 'bottom';
-      $css = '#sliding-popup.sliding-popup-'.$position.' {background:#'.$popup_settings['popup_bg_hex'].';}'
-           . '#sliding-popup .popup-content #popup-text h2, #sliding-popup .popup-content #popup-text p {color:#'.$popup_settings['popup_text_hex'].';}';
-      $option['type'] = 'inline';
-      drupal_add_css($css, $option);
-    }
-    drupal_add_css(drupal_get_path('module', 'eu_cookie_compliance') . '/css/eu_cookie_compliance.css');
+  if (!empty($popup_settings['popup_enabled']) && \Drupal::currentUser()->hasPermission('display EU Cookie Compliance popup') && $geoip_match) {
+    $language = Drupal::languageManager()->getCurrentLanguage();
 
     $popup_text_info = str_replace(array("\r", "\n"), '', $popup_settings['popup_info']['value']);
     $popup_text_agreed = str_replace(array("\r", "\n"), '', $popup_settings['popup_agreed']['value']);
-    $html_info = theme('eu_cookie_compliance_popup_info', array('message' => check_markup($popup_text_info, $popup_settings['popup_info']['format'], FALSE)));
-    $html_agreed = theme('eu_cookie_compliance_popup_agreed', array('message' => check_markup($popup_text_agreed, $popup_settings['popup_agreed']['format'], FALSE)));
-    $variables = array(
-      'popup_enabled' => $popup_settings['popup_enabled'],
-      'popup_agreed_enabled' => $popup_settings['popup_agreed_enabled'],
-      'popup_hide_agreed' => isset($popup_settings['popup_hide_agreed']) ? $popup_settings['popup_hide_agreed'] : FALSE,
-      'popup_html_info' => empty($html_info) ? FALSE : $html_info,
-      'popup_html_agreed' => empty($html_agreed) ? FALSE : $html_agreed,
-      'popup_height' => ($popup_settings['popup_height']) ? (int) $popup_settings['popup_height'] : 'auto',
-      'popup_width' => (drupal_substr($popup_settings['popup_width'], -1) == '%') ? $popup_settings['popup_width'] : (int) $popup_settings['popup_width'],
-      'popup_delay' => (int) ($popup_settings['popup_delay'] * 1000),
-      'popup_link' => url($popup_settings['popup_link']),
-      'popup_position' => $popup_settings['popup_position'],
-      'popup_language' => $language->language,
+    $html_info = array(
+      '#theme' => 'eu_cookie_compliance_popup_info',
+      '#message' => check_markup($popup_text_info, $popup_settings['popup_info']['format'], FALSE),
     );
-    drupal_add_js(array('eu_cookie_compliance' => $variables), array('type' => 'setting', 'scope' => 'footer'));
-    drupal_add_js(drupal_get_path('module', 'eu_cookie_compliance') . '/js/eu_cookie_compliance.js', array('type' => 'file', 'scope' => 'footer'));
+    $html_info = drupal_render($html_info);
+    $html_agreed = array(
+      '#theme' => 'eu_cookie_compliance_popup_agreed',
+      '#message' => check_markup($popup_text_agreed, $popup_settings['popup_agreed']['format'], FALSE),
+    );
+    $html_agreed = drupal_render($html_agreed);
+    $variables = array('eu_cookie_compliance' =>
+      array(
+        'popup_enabled'        => $popup_settings['popup_enabled'],
+        'popup_agreed_enabled' => $popup_settings['popup_agreed_enabled'],
+        'popup_hide_agreed'    => isset($popup_settings['popup_hide_agreed']) ? $popup_settings['popup_hide_agreed'] : FALSE,
+        'popup_html_info'      => empty($html_info) ? FALSE : $html_info,
+        'popup_html_agreed'    => empty($html_agreed) ? FALSE : $html_agreed,
+        'popup_height'         => ($popup_settings['popup_height']) ? (int) $popup_settings['popup_height'] : 'auto',
+        'popup_width'          => (drupal_substr($popup_settings['popup_width'], -1) == '%') ? $popup_settings['popup_width'] : (int) $popup_settings['popup_width'],
+        'popup_delay'          => (int) ($popup_settings['popup_delay'] * 1000),
+        'popup_link'           => url($popup_settings['popup_link']),
+        'popup_position'       => $popup_settings['popup_position'],
+        'popup_language'       => $language->id,
+        'popup_bg_hex'         => !empty($popup_settings['popup_bg_hex']) ? $popup_settings['popup_bg_hex'] : FALSE,
+        'popup_text_hex'       => !empty($popup_settings['popup_text_hex']) ? $popup_settings['popup_text_hex'] : FALSE,
+      ),
+    );
+    $page['#attached']['js'][] = array(
+      'data' => $variables,
+      'type' => 'setting',
+    );
+    $page['#attached']['library'][] = 'eu_cookie_compliance/eu_cookie_compliance';
   }
 }
 
@@ -88,42 +78,32 @@ function eu_cookie_compliance_permission() {
 /**
  * Implements hook_theme().
  */
-function eu_cookie_compliance_theme() {
-  $path = drupal_get_path('module', 'eu_cookie_compliance') . '/theme';
+function eu_cookie_compliance_theme($existing, $type, $theme, $path) {
   return array(
     'eu_cookie_compliance_popup_info' => array(
-      'template' => 'eu-cookie-compliance-popup-info',
+      'template' => 'eu_cookie_compliance_popup_info',
       'variables' => array('message' => NULL),
-      'path' => $path,
     ),
     'eu_cookie_compliance_popup_agreed' => array(
-      'template' => 'eu-cookie-compliance-popup-agreed',
+      'template' => 'eu_cookie_compliance_popup_agreed',
       'variables' => array('message' => NULL),
-      'path' => $path,
     ),
   );
 }
-
 /**
- *
  * Retrieves settings from the database for a current language.
- *
- * @global type $language
- * @param type $setting
- * @return type
  */
-
 function eu_cookie_compliance_get_settings($setting = 'all') {
-  global $language;
-  $popup_settings = variable_get('eu_cookie_compliance_' . $language->language, array());
-
+  $language = Drupal::languageManager()->getCurrentLanguage();
+  $language = $language->id;
+  $popup_settings = \Drupal::config('eu_cookie_compliance.settings')->get($language);
   if ($setting == 'all') {
     return $popup_settings;
   }
-
   if (isset($popup_settings[$setting])) {
     return $popup_settings[$setting];
-  } else {
+  }
+  else {
     return NULL;
   }
 }
