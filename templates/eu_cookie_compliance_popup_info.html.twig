@@ -12,6 +12,8 @@
  *
  * Variables available:
  * - message:  Contains the text that will be display whithin the pop-up
+ * - agree_button: Label for the agree button
+ * - disagree_button: Label for the disagree button
  */
 #}
 
@@ -21,8 +23,8 @@
       {{ message }}
     </div>
     <div id="popup-buttons">
-      <button type="button" class="agree-button">{{ 'Yes, I agree'|t }}</button>
-      <button type="button" class="find-more-button">{{ 'No, I want to find out more'|t }}</button>
+      <button type="button" class="agree-button">{{ agree_button }}</button>
+      <button type="button" class="find-more-button">{{ disagree_button }}</button>
     </div>
   </div>
 </div>

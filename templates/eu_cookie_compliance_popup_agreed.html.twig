@@ -12,6 +12,8 @@
  *
  * Variables available:
  * - $message:  Contains the text that will be display whithin the pop-up
+ * - $hide_button: Label for the hide button
+ * - $find_more_button: Label for the find out more button
  */
 #}
 
@@ -21,8 +23,8 @@
       {{ message }}
     </div>
     <div id="popup-buttons">
-      <button type="button" class="hide-popup-button">{{ 'Hide this message'|t }}</button>
-      <button type="button" class="find-more-button" >{{ 'More information on cookies'|t }}</button>
+      <button type="button" class="hide-popup-button">{{ hide_button }}</button>
+      <button type="button" class="find-more-button" >{{ find_more_button }}</button>
     </div>
   </div>
 </div>

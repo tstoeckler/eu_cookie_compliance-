@@ -30,6 +30,16 @@ class EuCookieComplianceAdminForm extends ConfigFormBase {
     $language = \Drupal::languageManager()->getCurrentLanguage();
     $ln = $language->id;
     $popup_settings = eu_cookie_compliance_get_settings();
+
+    $domainSetting = \Drupal::config('eu_cookie_compliance.settings')->get('domain');
+
+    $form['eu_cookie_compliance_domain'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Domain'),
+      '#default_value' => $domainSetting['setting'],
+      '#description' => t('Sets the domain of the cookie to a specific url.  Used when you need consistency across domains.  This is language independent.'),
+    );
+
     $form['eu_cookie_compliance_' . $ln] = array(
       '#type'  => 'item',
       '#tree'   => TRUE,
@@ -45,10 +55,17 @@ class EuCookieComplianceAdminForm extends ConfigFormBase {
       '#default_value' => isset($popup_settings['popup_enabled']) ? $popup_settings['popup_enabled'] : 0,
     );
 
-    if (\Drupal::moduleHandler()->moduleExists(('geoip'))) {
+    $form['eu_cookie_compliance_' . $ln]['popup_clicking_confirmation'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Consent by clicking'),
+      '#default_value' => isset($popup_settings['popup_clicking_confirmation']) ? $popup_settings['popup_clicking_confirmation'] : 1,
+      '#description' => t('By default by clicking any link on the website the visitor accepts the cookie policy. Uncheck this box if you do not require this functionality. You may want to edit the pop-up message below accordingly.'),
+    );
+
+    if (\Drupal::moduleHandler()->moduleExists('geoip') || \Drupal::moduleHandler()->moduleExists('smart_ip')) {
       $form['eu_cookie_compliance_' . $ln]['eu_only'] = array(
         '#type' => 'checkbox',
-        '#title' => t('Only display popup in EU countries (using the <a href="http://drupal.org/project/geoip">geoip</a> module)'),
+        '#title' => t('Only display popup in EU countries (using the <a href="http://drupal.org/project/geoip">geoip</a> module or the <a href="http://drupal.org/project/smart_ip">smart_ip</a> module)'),
         '#default_value' => isset($popup_settings['eu_only']) ? $popup_settings['eu_only'] : 0,
       );
     }
@@ -60,12 +77,28 @@ class EuCookieComplianceAdminForm extends ConfigFormBase {
       '#description' => t('By default the pop-up appears at the bottom of the website. Tick this box if you want it to appear at the top'),
     );
 
+    $form['eu_cookie_compliance_' . $ln]['popup_agree_button_message'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Agree button message'),
+      '#default_value' => isset($popup_settings['popup_agree_button_message']) ? $popup_settings['popup_agree_button_message'] : t('OK, I agree'),
+      '#size' => 30,
+      '#required' => TRUE,
+    );
+
+    $form['eu_cookie_compliance_' . $ln]['popup_disagree_button_message'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Disagree button message'),
+      '#default_value' => isset($popup_settings['popup_disagree_button_message']) ? $popup_settings['popup_disagree_button_message'] : t('No, give me more info'),
+      '#size' => 30,
+      '#required' => TRUE,
+    );
+
     $form['eu_cookie_compliance_' . $ln]['popup_info'] = array(
       '#type' => 'text_format',
       '#title' => t('Popup message - requests consent'),
       '#default_value' => isset($popup_settings['popup_info']['value']) ? $popup_settings['popup_info']['value'] : '',
       '#required' => TRUE,
-      '#format' => isset($popup_settings['popup_info']['format']) ? $popup_settings['popup_info']['format'] : NULL,
+      '#format' => isset($popup_settings['popup_info']['format']) ? $popup_settings['popup_info']['format'] : filter_default_format(),
     );
 
     $form['eu_cookie_compliance_' . $ln]['popup_agreed_enabled'] = array(
@@ -81,12 +114,28 @@ class EuCookieComplianceAdminForm extends ConfigFormBase {
       '#description' => t('Clicking a link hides the thank you message automatically.'),
     );
 
+    $form['eu_cookie_compliance_' . $ln]['popup_find_more_button_message'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Find more button message'),
+      '#default_value' => isset($popup_settings['popup_find_more_button_message']) ? $popup_settings['popup_find_more_button_message'] : t('More info'),
+      '#size' => 30,
+      '#required' => TRUE,
+    );
+
+    $form['eu_cookie_compliance_' . $ln]['popup_hide_button_message'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Hide button message'),
+      '#default_value' => isset($popup_settings['popup_hide_button_message']) ? $popup_settings['popup_hide_button_message'] : t('Hide'),
+      '#size' => 30,
+      '#required' => TRUE,
+    );
+
     $form['eu_cookie_compliance_' . $ln]['popup_agreed'] = array(
       '#type' => 'text_format',
       '#title' => t('Popup message - thanks for giving consent'),
       '#default_value' => isset($popup_settings['popup_agreed']['value']) ? $popup_settings['popup_agreed']['value'] : '',
       '#required' => TRUE,
-      '#format' => isset($popup_settings['popup_agreed']['format']) ? $popup_settings['popup_agreed']['format'] : NULL,
+      '#format' => isset($popup_settings['popup_agreed']['format']) ? $popup_settings['popup_agreed']['format'] : filter_default_format(),
     );
 
     $form['eu_cookie_compliance_' . $ln]['popup_link'] = array(
@@ -97,6 +146,12 @@ class EuCookieComplianceAdminForm extends ConfigFormBase {
       '#maxlength' => 220,
       '#required' => TRUE,
       '#description' => t('Enter link to your privacy policy or other page that will explain cookies to your users. For external links prepend http://'),
+    );
+
+    $form['eu_cookie_compliance_' . $ln]['popup_link_new_window'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Open privacy policy link in a new window'),
+      '#default_value' => isset($popup_settings['popup_link_new_window']) ? $popup_settings['popup_link_new_window'] : 1,
     );
 
     $form['eu_cookie_compliance_' . $ln]['popup_height'] = array(
@@ -139,6 +194,7 @@ class EuCookieComplianceAdminForm extends ConfigFormBase {
       '#title' => t('Background Color'),
       '#default_value' => isset($popup_settings['popup_bg_hex']) ? $popup_settings['popup_bg_hex'] : '0779BF', // Garland colors :)
       '#description' => t('Change the background color of the popup. Provide HEX value without the #'),
+      '#element_validate' => array('eu_cookie_compliance_validate_hex'),
     );
 
     $form['eu_cookie_compliance_' . $ln]['popup_text_hex'] = array(
@@ -146,6 +202,32 @@ class EuCookieComplianceAdminForm extends ConfigFormBase {
       '#title' => t('Text Color'),
       '#default_value' => isset($popup_settings['popup_text_hex']) ? $popup_settings['popup_text_hex'] : 'ffffff',
       '#description' => t('Change the text color of the popup. Provide HEX value without the #'),
+      '#element_validate' => array('eu_cookie_compliance_validate_hex'),
+    );
+    // Adding option to add/remove popup on specified domains
+    $exclude_domains_option_active = array(
+      0 => t('Add'),
+      1 => t('Remove'),
+    );
+    $form['eu_cookie_compliance_' . $ln]['domains_option'] = array(
+      '#type' => 'radios',
+      '#title' => t('Add/Remove popup on specified domains'),
+      '#default_value' => isset($popup_settings['domains_option']) ? $popup_settings['domains_option'] : 1,
+      '#options' => $exclude_domains_option_active,
+      '#description' => t("Specify if you want to add or remove popup on the listed below domains."),
+    );
+    $form['eu_cookie_compliance_' . $ln]['domains_list'] = array(
+      '#type' => 'textarea',
+      '#title' => t('Domains list'),
+      '#default_value' => isset($popup_settings['domains_list']) ? $popup_settings['domains_list'] : '',
+      '#description' => t("Specify domains with protocol (e.g. http or https). Enter one domain per line."),
+    );
+
+    $form['eu_cookie_compliance_' . $ln]['exclude_paths'] = array(
+      '#type' => 'textarea',
+      '#title' => t('Exclude paths'),
+      '#default_value' => isset($popup_settings['exclude_paths']) ? $popup_settings['exclude_paths'] : '',
+      '#description' => t("Specify pages by using their paths. Enter one path per line. The '*' character is a wildcard. Example paths are %blog for the blog page and %blog-wildcard for every personal blog. %front is the front page.", array('%blog' => 'blog', '%blog-wildcard' => 'blog/*', '%front' => '<front>')),
     );
 
     return parent::buildForm($form, $form_state);
@@ -166,6 +248,15 @@ class EuCookieComplianceAdminForm extends ConfigFormBase {
     if (!preg_match('/^[1-9][0-9]{0,4}\%?$/', $form_state['values']['eu_cookie_compliance_' . $ln]['popup_width'])) {
       \Drupal::formBuilder()->setErrorByName('eu_cookie_compliance_popup_width', $form_state, t('Width must be an integer or a percentage value.'));
     }
+    $popup_link = $form_state['values']['eu_cookie_compliance_' . $ln]['popup_link'];
+    //if the link contains a fragment then check if it validates then rewrite link with full url
+    if ((strpos($popup_link, '#') !== FALSE) && (strpos($popup_link, 'http') === FALSE)) {
+      $fragment = explode('#', $popup_link);
+      $popup_link = url($fragment[0], array('fragment' => $fragment[1], 'absolute' => TRUE));
+      form_set_error('eu_cookie_compliance_' . $ln . '][popup_link', t('Looks like your privacy policy link contains fragment #, you should make this an absolute url eg @link', array('@link' => $popup_link)));
+    }
+
+   \Drupal::cache()->delete('eu_cookie_compliance_client_settings_' . $language->id);
   }
 
   /**
@@ -180,7 +271,11 @@ class EuCookieComplianceAdminForm extends ConfigFormBase {
         ->set("{$language}.{$field}", $value)
         ->save();
     }
+    $this->config('eu_cookie_compliance.settings')
+    ->set('domain.setting', $form_state['values']['eu_cookie_compliance_domain'])
+    ->save();
     parent::submitForm($form, $form_state);
   }
 
 }
+
