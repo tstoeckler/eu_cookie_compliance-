@@ -82,6 +82,7 @@ function eu_cookie_compliance_page_build(&$page) {
           $popup_settings[$key] = '';
         }
       }
+      $data['css'] = '';
       // color overrides
       if ($popup_settings['popup_bg_hex'] != '' and $popup_settings['popup_text_hex'] != '') {
         $position = $popup_settings['popup_position'] ? 'top' : 'bottom';
