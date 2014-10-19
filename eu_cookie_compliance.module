@@ -5,6 +5,7 @@
  * Communications that comes into effect in the UK on 26th May 2012.
  */
 
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Path\AliasManager;
 use Drupal\Core\Path\AliasStorage;
 use Drupal\Core\Path\AliasWhitelist;
@@ -118,7 +119,7 @@ function eu_cookie_compliance_page_build(&$page) {
           'popup_height'         => ($popup_settings['popup_height'] != '') ? (int) $popup_settings['popup_height'] : 'auto',
           'popup_width'          => (drupal_substr($popup_settings['popup_width'], -1) == '%') ? $popup_settings['popup_width'] : (int) $popup_settings['popup_width'],
           'popup_delay'          => (int) ($popup_settings['popup_delay'] * 1000),
-          'popup_link'           => url($popup_settings['popup_link']),
+          'popup_link'           => _url($popup_settings['popup_link']),
           'popup_link_new_window' => isset($popup_settings['popup_link_new_window']) ? $popup_settings['popup_link_new_window'] : 1,
           'popup_position'       => $popup_settings['popup_position'],
           'popup_language'       => $language->id,
@@ -135,20 +136,6 @@ function eu_cookie_compliance_page_build(&$page) {
     );
     $page['#attached']['library'][] = 'eu_cookie_compliance/eu_cookie_compliance';
   }
-}
-
-/**
- * Implements hook_permission().
- */
-function eu_cookie_compliance_permission() {
-  return array(
-    'administer EU Cookie Compliance popup' => array(
-      'title' => 'Administer EU Cookie Compliance popup'
-    ),
-    'display EU Cookie Compliance popup' => array(
-      'title' => 'Display EU Cookie Compliance popup'
-    ),
-  );
 }
 
 /**
@@ -187,9 +174,8 @@ function eu_cookie_compliance_get_settings($setting = 'all') {
 /**
  * Validate field for a HEX value if a value is set
  */
-
-function eu_cookie_compliance_validate_hex($element, &$form_state) {
+function eu_cookie_compliance_validate_hex($element, FormStateInterface &$form_state) {
   if (!empty($element['#value']) && !preg_match('/^[0-9a-fA-F]{3,6}$/', $element['#value'])) {
-    form_error($element, t('%name must be a HEX value (without leading #) or empty.', array('%name' => $element['#title'])));
+    $form_state->setError($element, t('%name must be a HEX value (without leading #) or empty.', array('%name' => $element['#title'])));
   }
 }

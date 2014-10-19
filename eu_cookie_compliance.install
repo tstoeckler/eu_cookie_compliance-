@@ -24,10 +24,3 @@ function eu_cookie_compliance_install() {
     ->set($language . '.popup_agreed', $popup_agreed)
     ->save();
 }
-
-/**
- * Implements hook_uninstall().
- */
-function eu_cookie_compliance_uninstall() {
-  \Drupal::config('eu_cookie_compliance.settings')->delete();
-}
