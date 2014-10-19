@@ -127,7 +127,7 @@ function eu_cookie_compliance_page_build(&$page) {
           'domain'               => $domain_setting['setting'],
         ),
       );
-      \Drupal::cache()->set('eu_cookie_compliance_client_settings_' . $language->id, $data);
+      \Drupal::cache()->set('eu_cookie_compliance_client_settings_' . $language->getId(), $data);
     }
     $page['#attached']['js'][] = array(
       'data' => $data['variables'],
@@ -171,7 +171,7 @@ function eu_cookie_compliance_theme($existing, $type, $theme, $path) {
  */
 function eu_cookie_compliance_get_settings($setting = 'all') {
   $language = Drupal::languageManager()->getCurrentLanguage();
-  $language = $language->id;
+  $language = $language->getId();
   $popup_settings = \Drupal::config('eu_cookie_compliance.settings')->get($language);
   if ($setting == 'all') {
     return $popup_settings;

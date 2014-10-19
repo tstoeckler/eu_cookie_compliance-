@@ -28,7 +28,7 @@ class EuCookieComplianceAdminForm extends ConfigFormBase {
   public function buildForm(array $form, array &$form_state) {
 
     $language = \Drupal::languageManager()->getCurrentLanguage();
-    $ln = $language->id;
+    $ln = $language->getId();
     $popup_settings = eu_cookie_compliance_get_settings();
 
     $domainSetting = \Drupal::config('eu_cookie_compliance.settings')->get('domain');
