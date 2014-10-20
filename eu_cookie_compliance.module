@@ -13,6 +13,7 @@ use Drupal\Core\Extension\ModuleHandler;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Cache\DatabaseBackend;
 use Drupal\Core\Language\LanguageManager;
+use Drupal\Component\Utility\String;
 
 /**
  * Implements hook_page_build().
@@ -87,8 +88,8 @@ function eu_cookie_compliance_page_build(&$page) {
       // color overrides
       if ($popup_settings['popup_bg_hex'] != '' and $popup_settings['popup_text_hex'] != '') {
         $position = $popup_settings['popup_position'] ? 'top' : 'bottom';
-        $data['css'] = '#sliding-popup.sliding-popup-' . $position . ' {background:#'. check_plain($popup_settings["popup_bg_hex"]) . ';}'
-             . '#sliding-popup .popup-content #popup-text h2, #sliding-popup .popup-content #popup-text p {color:#' . check_plain($popup_settings['popup_text_hex']) . ' !important;}';
+        $data['css'] = '#sliding-popup.sliding-popup-' . $position . ' {background:#'. String::checkPlain($popup_settings["popup_bg_hex"]) . ';}'
+             . '#sliding-popup .popup-content #popup-text h2, #sliding-popup .popup-content #popup-text p {color:#' . String::checkPlain($popup_settings['popup_text_hex']) . ' !important;}';
       }
       $popup_text_info = str_replace(array("\r", "\n"), '', $popup_settings['popup_info']['value']);
       $popup_text_agreed = str_replace(array("\r", "\n"), '', $popup_settings['popup_agreed']['value']);
